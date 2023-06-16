@@ -20,7 +20,7 @@
 namespace xacc {
 namespace quantum {
 
-class QppAccelerator : public Accelerator {
+    class QppAccelerator : public Accelerator, public xacc::Cloneable<Accelerator> {
 public:
     // Identifiable interface impls
     virtual const std::string name() const override { return "qpp"; }
@@ -40,7 +40,7 @@ public:
     }
     // ExecutionInfo implementation:
     virtual xacc::HeterogeneousMap getExecutionInfo() const override { return m_executionInfo; }
-  
+    std::shared_ptr<Accelerator> clone() { return std::make_shared<QppAccelerator>(); }
   private:
     // Cache execution info after execution
     void cacheExecutionInfo();

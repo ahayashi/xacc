@@ -14,7 +14,8 @@
 #include <thread>
 #include <mutex>
 #include "IRUtils.hpp"
-
+#include <chrono>
+using namespace std::chrono;
 namespace {
     inline bool isMeasureGate(const xacc::InstPtr& in_instr)
     {
@@ -245,7 +246,9 @@ namespace quantum {
     void QppAccelerator::execute(std::shared_ptr<AcceleratorBuffer> buffer, const std::shared_ptr<CompositeInstruction> compositeInstruction)
     {
 #ifdef _XACC_MUTEX
-        std::lock_guard<std::recursive_mutex> lock(getMutex());
+        auto start = high_resolution_clock::now();
+        printf("in execute1, this = %p\n", this);
+        //std::lock_guard<std::recursive_mutex> lock(getMutex());
 #endif
         const auto runCircuit = [&](bool shotsMode){
             m_visitor->initialize(buffer, shotsMode);
@@ -263,7 +266,7 @@ namespace quantum {
 
             m_visitor->finalize();
         };
-
+        printf("in execute 1, shotCountFromFinalStateVec(compositeInstruction) = %d\n", shotCountFromFinalStateVec(compositeInstruction));
         // Not possible to simulate shot count by direct sampling,
         // e.g. must collapse the state vector.
         if(!shotCountFromFinalStateVec(compositeInstruction))
@@ -324,12 +327,16 @@ namespace quantum {
             cacheExecutionInfo();
             m_visitor->finalize();
         }
+        auto stop = high_resolution_clock::now();
+        auto duration = duration_cast<microseconds>(stop - start);
+        std::cout << "Time taken by function: " << duration.count() << " microseconds" << std::endl;
     }
     
     void QppAccelerator::execute(std::shared_ptr<AcceleratorBuffer> buffer, const std::vector<std::shared_ptr<CompositeInstruction>> compositeInstructions)
     {
 #ifdef _XACC_MUTEX
-        std::lock_guard<std::recursive_mutex> lock(getMutex());
+        printf("in execute2, this = %p\n", this);
+        //std::lock_guard<std::recursive_mutex> lock(getMutex());
 #endif
 
         if (!m_vqeMode || compositeInstructions.size() <= 1) 
@@ -378,7 +385,8 @@ namespace quantum {
     void QppAccelerator::apply(std::shared_ptr<AcceleratorBuffer> buffer, std::shared_ptr<Instruction> inst) 
     {
 #ifdef _XACC_MUTEX
-        std::lock_guard<std::recursive_mutex> lock(getMutex());
+        //std::lock_guard<std::recursive_mutex> lock(getMutex());
+        printf("in apply, this = %p\n", this);
 #endif
 
         if (!m_visitor->isInitialized()) {
